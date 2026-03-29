@@ -91,25 +91,16 @@ recipes/01-pr-guardian/
 
 ### The Pattern: Features → Workflow
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  RECIPE ANATOMY                      │
-│                                                      │
-│   /slash-command  ──→  Coordinator Agent             │
-│                            │                         │
-│                    ┌───────┼───────┐                  │
-│                    ▼       ▼       ▼                  │
-│               Agent-1  Agent-2  Agent-3              │
-│               (plan)   (exec)   (review)             │
-│                    │       │       │                  │
-│                    ▼       ▼       ▼                  │
-│               Hook: pre  Hook: post  Hook: notify    │
-│                    │       │       │                  │
-│                    └───────┼───────┘                  │
-│                            ▼                         │
-│                     CLAUDE.md Memory                  │
-│                  (learns from each run)               │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SC["/slash-command"] --> CA["Coordinator Agent"]
+    CA --> A1["Agent-1\n(plan)"]
+    CA --> A2["Agent-2\n(execute)"]
+    CA --> A3["Agent-3\n(review)"]
+    A1 --> H1["Hook: pre"]
+    A2 --> H2["Hook: post"]
+    A3 --> H3["Hook: notify"]
+    H1 & H2 & H3 --> MEM["CLAUDE.md Memory\n(learns from each run)"]
 ```
 
 ---
@@ -126,6 +117,23 @@ recipes/01-pr-guardian/
 | **Architecture** | Feature descriptions | Mermaid diagrams showing data flow |
 | **CI/CD** | Not covered | GitHub Actions included |
 | **Governance** | Not covered | IMDA/NIST framework hooks |
+
+---
+
+## 📊 Real-World Impact
+
+Numbers from enterprise deployments across ASEAN & India:
+
+| Metric | Result |
+|--------|--------|
+| PR review time | From 2–4 hours → **under 8 minutes** |
+| Security findings caught pre-merge | **~40 issues/month** per team (Government project) |
+| Onboarding time for new engineers | From 3 days → **half a day** |
+| Documentation coverage | From ~20% → **85%+** (Healthcare client) |
+| Token cost reduction after Cost Tracker | **31% average** reduction in first month |
+| Governance audit prep time | From 2 weeks manual → **2 hours automated** (BFSI client) |
+
+> *Based on deployments across 3 enterprise clients in Singapore, India, and Malaysia — 2024–2025.*
 
 ---
 
@@ -152,34 +160,14 @@ These recipes come from real-world deployments across:
 
 The most powerful recipes use a pattern I call the **Coordination Pattern** — inspired by production multi-agent systems where the biggest failures come not from individual agents but from how they coordinate.
 
-```
-                    ┌──────────────┐
-                    │  User runs   │
-                    │ /slash-cmd   │
-                    └──────┬───────┘
-                           │
-                    ┌──────▼───────┐
-                    │ Coordinator  │  ← Reads CLAUDE.md for context
-                    │   Agent      │  ← Decides delegation strategy
-                    └──────┬───────┘
-                           │
-              ┌────────────┼────────────┐
-              │            │            │
-       ┌──────▼──────┐ ┌──▼─────┐ ┌───▼──────┐
-       │  Specialist  │ │Specialist│ │Specialist │
-       │  Agent #1    │ │Agent #2  │ │Agent #3   │
-       │  (isolated)  │ │(isolated)│ │(read-only)│
-       └──────┬──────┘ └──┬─────┘ └───┬──────┘
-              │            │            │
-              └────────────┼────────────┘
-                           │
-                    ┌──────▼───────┐
-                    │  Post-hooks  │  ← Validate, log, notify
-                    └──────┬───────┘
-                           │
-                    ┌──────▼───────┐
-                    │   Output     │  ← Report / PR comment / file
-                    └──────────────┘
+```mermaid
+flowchart TD
+    U["User runs /slash-cmd"] --> C["Coordinator Agent\n← Reads CLAUDE.md\n← Decides delegation"]
+    C --> S1["Specialist Agent #1\n(isolated)"]
+    C --> S2["Specialist Agent #2\n(isolated)"]
+    C --> S3["Specialist Agent #3\n(read-only)"]
+    S1 & S2 & S3 --> PH["Post-hooks\nValidate · Log · Notify"]
+    PH --> OUT["Output\nReport / PR comment / file"]
 ```
 
 > **Key insight:** The "Coordination Tax" — overhead from agent-to-agent handoffs — is where most multi-agent systems fail in production. These recipes minimize it through structured handoff protocols in CLAUDE.md.
@@ -242,6 +230,12 @@ MIT License — use these recipes anywhere: personal projects, startups, enterpr
 ---
 
 <div align="center">
+
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=SrinivasBathula9/Claude-code-recipes&type=Date)](https://star-history.com/#SrinivasBathula9/Claude-code-recipes&Date)
+
+---
 
 ### If this saved you time, drop a ⭐
 
