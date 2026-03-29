@@ -1,0 +1,37 @@
+name: PR Guardian Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        run: |
+          gh pr diff ${{ github.event.pull_request.number }} > /tmp/pr-diff.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Claude Code Review
+        run: |
+          # Run Claude Code in headless mode against the diff
+          # Requires ANTHROPIC_API_KEY secret
+          claude -p "Review this PR diff for security, performance, and code quality issues. Follow the standards in CLAUDE.md. Output a structured review." < /tmp/pr-diff.txt > /tmp/review.md
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Post review comment
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/review.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
